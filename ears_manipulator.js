@@ -2471,8 +2471,9 @@ function createEars() {
             }
             break;
     }
+
     Canvas.updateView({
-        groups: [getGroup("ears_top"), getGroup("ears_left"), getGroup("ears_right")],
+        groups: [getGroup("ears_top"), getGroup("ears_left"), getGroup("ears_right")].filter(g => g),
         elements: Object.values(meshes)
     })
 }
@@ -3327,6 +3328,29 @@ BBPlugin.register('ears_manipulator', {
         );
         let ears_alfalfa = new Property(ModelProject, 'instance', 'ears_alfalfa', {default: {entries: {}}, exposed: false, condition: {formats: ["ears"]}});
         let group_ids = new Property(Group, 'string', 'id', {condition: {formats: ["ears"]}});
+
+        // Action to hide layers, similar to the one available in the skin format
+        let layer_toggle = new Action('ears_toggle_skin_layers', {
+            icon: 'layers_clear',
+            category: 'edit',
+            condition: {formats: ["ears"]},
+            click() {
+                let edited = Mesh.all.filter(m => m.name.includes("Layer"));
+                if (!edited.length) return;
+                Undo.initEdit({elements: edited});
+                let visibility = !edited[0].visibility;
+                edited.forEach(m => m.visibility = visibility);
+                Undo.finishEdit("Toggle skin layer");
+                Canvas.updateVisibility();
+            }
+        })
+        toDelete.push(layer_toggle);
+
+        let outliner = Toolbars.outliner;
+        let layer_toggle_index = outliner.children.findIndex(e => e.id == 'toggle_skin_layer');
+        if (layer_toggle_index >= 0) {
+            outliner.children.splice(layer_toggle_index, 0, layer_toggle)
+        }
 
         // Add Ears manipulator menu
         /// Toolbar items
