@@ -786,7 +786,6 @@ const model_meshes = {
         texture: "base",
         group: "left_arm",
         is_ears: true,
-        rotatable: true,
         origin: [-4, 12, 0],
         position: [-8, 8, -2],
         size: [0, 4, 4],
@@ -878,7 +877,6 @@ const model_meshes = {
         texture: "base",
         group: "right_arm",
         is_ears: true,
-        rotatable: true,
         origin: [8, 12, 0],
         position: [8, 8, -2],
         size: [0, 4, 4],
@@ -970,7 +968,6 @@ const model_meshes = {
         texture: "base",
         group: "left_arm",
         is_ears: true,
-        rotatable: true,
         origin: [-4, 12, 0],
         position: [-7, 8, -2],
         size: [0, 4, 4],
@@ -1062,7 +1059,6 @@ const model_meshes = {
         texture: "base",
         group: "right_arm",
         is_ears: true,
-        rotatable: true,
         origin: [7, 12, 0],
         position: [7, 8, -2],
         size: [0, 4, 4],
@@ -1154,7 +1150,6 @@ const model_meshes = {
         texture: "base",
         group: "left_leg",
         is_ears: true,
-        rotatable: true,
         origin: [-2, 0, -2],
         position: [-4, 0, -6],
         size: [4, 0, 4],
@@ -1246,7 +1241,6 @@ const model_meshes = {
         texture: "base",
         group: "right_leg",
         is_ears: true,
-        rotatable: true,
         origin: [2, 0, -2],
         position: [0, 0, -6],
         size: [4, 0, 4],
@@ -1263,13 +1257,12 @@ const model_meshes = {
     },
     // Ears
     ears_above: {
-        complex: true,
         id: "ears_above",
         name: "Ears (Top)",
         texture: "base",
-        group: "head",
+        group: "ears_top",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [0, 32, 0],
         position: [-8, 32, 0],
         vertices: {
@@ -1310,13 +1303,12 @@ const model_meshes = {
         }
     },
     ears_sides_left: {
-        complex: true,
         id: "ears_sides_left",
         name: "Ears (Left)",
         texture: "base",
-        group: "head",
+        group: "ears_left",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [-4, 28, 0],
         position: [-12, 24, 0],
         vertices: {
@@ -1357,13 +1349,12 @@ const model_meshes = {
         }
     },
     ears_sides_right: {
-        complex: true,
         id: "ears_sides_right",
         name: "Ears (Right)",
         texture: "base",
-        group: "head",
+        group: "ears_right",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [4, 28, 0],
         position: [4, 24, 0],
         vertices: {
@@ -1404,13 +1395,12 @@ const model_meshes = {
         }
     },
     ears_around_left: {
-        complex: true,
         id: "ears_around_left",
         name: "Ears (Left)",
         texture: "base",
-        group: "head",
+        group: "ears_left",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [-4, 32, 0],
         position: [-8, 24, 0],
         vertices: {
@@ -1451,13 +1441,12 @@ const model_meshes = {
         }
     },
     ears_around_right: {
-        complex: true,
         id: "ears_around_right",
         name: "Ears (Right)",
         texture: "base",
-        group: "head",
+        group: "ears_right",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [4, 32, 0],
         position: [4, 24, 0],
         vertices: {
@@ -1498,13 +1487,12 @@ const model_meshes = {
         }
     },
     ears_out_left: {
-        complex: true,
         id: "ears_out_left",
         name: "Ears (Left)",
         texture: "base",
-        group: "head",
+        group: "ears_left",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [-4, 32, 0],
         position: [-4, 32, -4],
         vertices: {
@@ -1545,13 +1533,12 @@ const model_meshes = {
         }
     },
     ears_out_right: {
-        complex: true,
         id: "ears_out_right",
         name: "Ears (Right)",
         texture: "base",
-        group: "head",
+        group: "ears_right",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [4, 32, 0],
         position: [4, 32, -4],
         vertices: {
@@ -1592,13 +1579,12 @@ const model_meshes = {
         }
     },
     ears_floppy_left: {
-        complex: true,
         id: "ears_floppy_left",
         name: "Ears (Left)",
         texture: "base",
-        group: "head",
+        group: "ears_left",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [-4, 31, 0],
         position: [-4, 31, -4],
         rotation: [0, 0, -30],
@@ -1640,13 +1626,12 @@ const model_meshes = {
         }
     },
     ears_floppy_right: {
-        complex: true,
         id: "ears_floppy_right",
         name: "Ears (Right)",
         texture: "base",
-        group: "head",
+        group: "ears_right",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [4, 31, 0],
         position: [4, 31, -4],
         rotation: [0, 0, 30],
@@ -1688,13 +1673,12 @@ const model_meshes = {
         }
     },
     ears_cross: {
-        complex: true,
         id: "ears_cross",
         name: "Ears (Top)",
         texture: "base",
-        group: "head",
+        group: "ears_top",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [0, 32, 0],
         position: [0, 32, 0],
         rotation: [0, -45, 0],
@@ -1768,13 +1752,12 @@ const model_meshes = {
         }
     },
     ears_tall: {
-        complex: true,
         id: "ears_tall",
         name: "Ears (Top)",
         texture: "base",
-        group: "head",
+        group: "ears_top",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [0, 32, 0],
         position: [-4, 32, 0],
         vertices: {
@@ -1815,13 +1798,12 @@ const model_meshes = {
         }
     },
     ears_tall_cross: {
-        complex: true,
         id: "ears_tall_cross",
         name: "Ears (Top)",
         texture: "base",
-        group: "head",
+        group: "ears_top",
+        complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [0, 32, 0],
         position: [0, 32, 0],
         rotation: [0, -45, 0],
@@ -1899,10 +1881,9 @@ const model_meshes = {
         id: "wing_asymmetric_l",
         name: "Left Wing",
         texture: "wing",
-        group: "body",
+        group: "wing_left",
         complex: true,
         is_ears: true,
-        rotatable: true,
         position: [-2, 10, 2],
         origin: [-2, 18, 2],
         rotation: [0, -30, 0],
@@ -1947,10 +1928,9 @@ const model_meshes = {
         id: "wing_asymmetric_r",
         name: "Right Wing",
         texture: "wing",
-        group: "body",
+        group: "wing_right",
         complex: true,
         is_ears: true,
-        rotatable: true,
         position: [2, 10, 2],
         origin: [2, 18, 2],
         rotation: [0, 30, 0],
@@ -1995,10 +1975,9 @@ const model_meshes = {
         id: "wing_symmetric_single",
         name: "Wing",
         texture: "wing",
-        group: "body",
+        group: "wing_center",
         complex: true,
         is_ears: true,
-        rotatable: true,
         position: [0, 10, 2],
         origin: [0, 18, 2],
         vertices: {
@@ -2165,9 +2144,8 @@ const model_meshes = {
         id: "cape",
         name: "Cape",
         texture: "cape",
-        group: "body",
+        group: "cape",
         is_ears: true,
-        rotatable: true,
         origin: [0, 24, 2],
         position: [-5, 8, 2],
         size: [10, 16, 1],
@@ -2206,7 +2184,6 @@ const model_meshes = {
         group: "head",
         complex: true,
         is_ears: true,
-        rotatable: true,
         origin: [0, 32, -4],
         position: [-4, 32, -4],
         rotation: [-25, 0, 0],
@@ -2278,8 +2255,10 @@ function rotatePoint3(point, angle, axis, origin=[0, 0, 0]) {
 }
 
 function createMesh(mesh_spec) {
-    if (mesh_spec.complex) return createComplexMesh(mesh_spec);
-    return createSimpleMesh(mesh_spec);
+    let uuid;
+    Mesh.all.filter((m) => m.name == mesh_spec.name).forEach((m) => {uuid = m.uuid; m.remove();});
+    if (mesh_spec.complex) return createComplexMesh(mesh_spec, uuid);
+    return createSimpleMesh(mesh_spec, uuid);
 }
 
 function createEmptyTexture(id, width, height) {
@@ -2292,7 +2271,7 @@ function createEmptyTexture(id, width, height) {
     return t;
 }
 
-function createTail() {
+function createTail(selected, uuid) {
     if (!Project.ears_settings.enabled || Project.ears_settings.tail_mode == "none") return;
     var origin, position, vertices = {};
     const segments = Project.ears_settings.tail_segments;
@@ -2345,7 +2324,7 @@ function createTail() {
     let faces = [];
     let texture = getTexture("base");
 
-    mesh = new Mesh({
+    let mesh = new Mesh({
         name: "Tail",
         origin: position,
         vertices: vertices
@@ -2388,11 +2367,19 @@ function createTail() {
 
     mesh.resizable = false;
 
-    let body = getOrCreateGroup("body");
+    let tail =  createGroup({
+        id: "tail",
+        name: "Tail",
+        origin: origin,
+        parent: "body",
+        uuid: uuid
+    });
 
-    mesh.addTo(body);
+    mesh.addTo(tail);
     mesh.addFaces(...faces);
     mesh.init();
+
+    if (selected) tail.select();
 }
 
 function createChest() {
@@ -2444,34 +2431,53 @@ function createEars() {
     switch (Project.ears_settings.ears_mode) {
         case "out":
             if (Project.ears_settings.ears_anchor == "front") {
+                getGroup("ears_left")?.transferOrigin([-4, 28, -4])
+                getGroup("ears_right")?.transferOrigin([4, 28, -4])
                 meshes.left.moveVector([0, -8, -8]);
                 meshes.right.moveVector([0, -8, -8]);
             } else if (Project.ears_settings.ears_anchor == "back") {
+                getGroup("ears_left")?.transferOrigin([-4, 28, 4])
+                getGroup("ears_right")?.transferOrigin([4, 28, 4])
                 meshes.left.moveVector([0, -8, 8]);
                 meshes.right.moveVector([0, -8, 8]);
             }
             break;
         case "behind":
+            getGroup("ears_left")?.transferOrigin([-4, 28, 4])
+            getGroup("ears_right")?.transferOrigin([4, 28, 4])
             meshes.left.moveVector([0, -8, 8]);
             meshes.right.moveVector([0, -8, 8]);
             break;
         case "floppy":
+            getGroup("ears_left")?.transferOrigin([-4, 31, 0])
+            getGroup("ears_right")?.transferOrigin([4, 31, 0])
             break;
         default:
+            let lr_height = Project.ears_settings.ears_mode == "around" ? 32 : 28;
             if (Project.ears_settings.ears_anchor == "front") {
                 for (let k in meshes) {
                     meshes[k].moveVector([0, 0, -4]);
                 }
+                getGroup("ears_top")?.transferOrigin([0, 32, -4]);
+                getGroup("ears_left")?.transferOrigin([-4, lr_height, -4])
+                getGroup("ears_right")?.transferOrigin([4, lr_height, -4])
             } else if (Project.ears_settings.ears_anchor == "back") {
                 for (let k in meshes) {
                     meshes[k].moveVector([0, 0, 4]);
                 }
+                getGroup("ears_top")?.transferOrigin([0, 32, 4]);
+                getGroup("ears_left")?.transferOrigin([-4, lr_height, 4])
+                getGroup("ears_right")?.transferOrigin([4, lr_height, 4])
             }
             break;
     }
+    Canvas.updateView({
+        groups: [getGroup("ears_top"), getGroup("ears_left"), getGroup("ears_right")],
+        elements: Object.values(meshes)
+    })
 }
 
-function createSnout() {
+function createSnout(selected, uuid) {
     if (!Project.ears_settings.enabled || !Project.ears_settings.snout) return;
     let w = Project.ears_settings.snout_width;
     let h = Project.ears_settings.snout_height;
@@ -2581,7 +2587,7 @@ function createSnout() {
                 snout_mwu: [7, 4],
                 snout_mwd: [7, 4 + h],
                 snout_swd: [8, 4 + h],
-                snout_swu: [8, h],
+                snout_swu: [8, 4],
             }
         };
 
@@ -2630,25 +2636,34 @@ function createSnout() {
         }
     }
 
-    let parent = getOrCreateGroup("head");
+    let snout = createGroup({
+        id: "snout",
+        name: "Snout",
+        origin: origin,
+        parent: "head",
+        uuid: uuid
+    });
+
     let texture = getTexture("base");
 
     let mesh = new Mesh({
         name: "Snout",
         origin,
         vertices
-    }).addTo(parent);
+    }).addTo(snout);
 
-    var f = Object.values(faces).map( (face_spec) => {return new MeshFace(mesh, {
+    var f = Object.values(faces).map( (face_spec) => new MeshFace(mesh, {
         texture,
         vertices: face_spec.vertices,
         uv: face_spec.uv
-    })});
+    }));
 
     mesh.resizable = false;
 
     mesh.addFaces(...f);
     mesh.init();
+
+    if (selected) snout.select();
 }
 
 function createProtrusions() {
@@ -2689,12 +2704,15 @@ function createWings() {
     }
 }
 
-function createCape() {
+function createCape(selected, uuid) {
     if (!Project.ears_settings.enabled || !Project.ears_settings.cape) return;
     if (!getTexture("cape")) {
         createEmptyTexture("cape", 20, 16);
     }
-    return createMesh(model_meshes.cape);
+    let cape = createGroup(model_groups.cape, uuid)
+    let m = createMesh(model_meshes.cape);
+    if (selected) cape.select();
+    return m;
 }
 
 function createSimpleMesh(mesh_spec) {
@@ -2853,10 +2871,6 @@ function createSimpleMesh(mesh_spec) {
         f.push(face);
     };
 
-    if (!mesh_spec.rotatable) {
-        mesh.rotatable = false;
-    };
-
     mesh.resizable = false;
 
     mesh.addFaces(...f);
@@ -2885,10 +2899,6 @@ function createComplexMesh(mesh_spec) {
         f.push(face);
     };
 
-    if (!mesh_spec.rotatable) {
-        mesh.rotatable = false;
-    };
-
     mesh.resizable = false;
 
     mesh.addFaces(...f);
@@ -2914,12 +2924,39 @@ const model_groups = {
         origin: [0, 12, 0],
         parent: "upper_body"
     },
+    wing_center: {
+        id: "wing_center",
+        name: "Wing",
+        origin: [0, 18, 2],
+        parent: "body",
+        is_ears: true
+    },
+    wing_left: {
+        id: "wing_left",
+        name: "Wing (Left)",
+        origin: [-2, 18, 2],
+        parent: "body",
+        is_ears: true
+    },
+    wing_right: {
+        id: "wing_right",
+        name: "Wing (Right)",
+        origin: [2, 18, 2],
+        parent: "body",
+        is_ears: true
+    },
     chest: {
         id: "chest",
         name: "Chest",
         origin: [0, 22, -2],
         parent: "body",
-        non_rotatable: true,
+        is_ears: true
+    },
+    cape: {
+        id: "cape",
+        name: "Cape",
+        origin: [0, 24, 2],
+        parent: "body",
         is_ears: true
     },
     head: {
@@ -2927,6 +2964,34 @@ const model_groups = {
         name: "Head",
         origin: [0, 24, 0],
         parent: "upper_body"
+    },
+    ears_top: {
+        id: "ears_top",
+        name: "Ears (Top)",
+        origin: [0, 32, 0],
+        parent: "head",
+        is_ears: true
+    },
+    ears_left: {
+        id: "ears_left",
+        name: "Ears (Left)",
+        origin: [-4, 28, 0],
+        parent: "head",
+        is_ears: true
+    },
+    ears_right: {
+        id: "ears_right",
+        name: "Ears (Right)",
+        origin: [4, 28, 0],
+        parent: "head",
+        is_ears: true
+    },
+    horn: {
+        id: "horn",
+        name: "Horn",
+        origin: [0, 32, -4],
+        parent: "head",
+        is_ears: true
     },
     left_arm: {
         id: "left_arm",
@@ -2954,18 +3019,19 @@ const model_groups = {
     }
 };
 
-function createGroup(group_spec) {
+function createGroup(group_spec, uuid) {
     var group = new Group({
         name: group_spec.name,
         origin: group_spec.origin,
-        rotation: group_spec.rotation
+        rotation: group_spec.rotation,
+        uuid: uuid
     }).init();
     group.id = group_spec.id;
 
     if(group_spec.parent) {
         let parent = getOrCreateGroup(group_spec.parent);
         if (!parent) {
-            parent = createVanillaGroups(model_groups[parent])
+            parent = createGroup(model_groups[parent])
         }
         group.addTo(parent);
     }
@@ -2996,25 +3062,25 @@ function getOrCreateGroup(id) {
 function updateEars() {
     let head_group = getOrCreateGroup("head");
     head_group.children.filter((child) => {
-        return child instanceof Mesh && child.name.startsWith("Ears");
+        return child.name.includes("Ear");
     }).forEach((c) => c.remove());
     createEars();
 }
 
 function updateTail() {
-    let body_group = getOrCreateGroup("body");
-    body_group.children.filter((child) => {
-        return child instanceof Mesh && child.name.startsWith("Tail");
-    }).forEach((c) => c.remove());
-    createTail();
+    let tail = getGroup("tail");
+    let selected = tail?.selected;
+    let uuid = tail?.uuid;
+    tail?.remove();
+    createTail(selected, uuid);
 }
 
 function updateSnout() {
-    let head_group = getOrCreateGroup("head");
-    head_group.children.filter((child) => {
-        return child instanceof Mesh && child.name.startsWith("Snout");
-    }).forEach((c) => c.remove());
-    createSnout();
+    let snout = getGroup("snout");
+    let selected = snout?.selected;
+    let uuid = snout?.uuid;
+    snout?.remove();
+    createSnout(selected, uuid);
 }
 
 function updateProtrusions() {
@@ -3034,9 +3100,8 @@ function updateProtrusions() {
 
 function updateWings() {
     let body_group = getOrCreateGroup("body");
-    body_group.children.filter((child) => {
-        return child instanceof Mesh && child.name.endsWith("Wing");
-    }).forEach((c) => c.remove());
+    body_group.children.filter((child) => child.name.includes("Wing"))
+        .forEach((c) => c.remove());
     createWings();
 }
 
@@ -3057,11 +3122,11 @@ function updateChest() {
 }
 
 function updateCape() {
-    let body_group = getOrCreateGroup("body");
-    body_group.children.filter((child) => {
-        return child instanceof Mesh && child.name.startsWith("Cape");
-    }).forEach((c) => c.remove());
-    createCape();
+    let cape = getGroup("cape");
+    let selected = cape?.selected;
+    let uuid = cape?.uuid;
+    cape?.remove();
+    createCape(selected, uuid);
 }
 
 function updateAllEarsFeatures() {
