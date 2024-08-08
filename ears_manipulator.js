@@ -88,12 +88,45 @@ const alfalfa_rectangles = [
     [16, 52, 32, 12]
 ]
 
-async function dataUrlToBytes(dataUrl) {
-    const res = await fetch(dataUrl);
-    return new Uint8Array(await res.arrayBuffer());
+function extractDataFromDataUrl(data_url) {
+    return data_url.split(',')[1];
 }
 
-async function loadAlfalfaFromCanvasCtx(ctx) {
+function b64ToBytes(b64) {
+    return Uint8Array.from(atob(b64), b => b.charCodeAt(0));
+}
+
+function b64ToDataUrl(b64, format = "application/octet-stream") {
+    return `data:${format};base64,${b64}`;
+}
+
+function bytesToB64(bytes) {
+    return btoa(String.fromCharCode(...bytes));
+}
+
+// function dataUrlToBytes(data_url) {
+//     let data = extractDataFromDataUrl(data_url);
+//     if (data_url.split(',')[0].endsWith(";base64")) {
+//         data = atob(data);
+//     }
+//     return Uint8Array.from(data, b => b.charCodeAt(0));
+// }
+
+// async function blobToDataURL(blob) {
+//     var data_url;
+//     const p = new Promise(resolve => {
+//         var reader = new FileReader();
+//         reader.onloadend = function() {
+//             data_url = reader.result;
+//             resolve();
+//         };
+//         reader.readAsDataURL(blob);
+//     });
+//     await p;
+//     return data_url;
+// }
+
+function loadAlfalfaFromCanvasCtx(ctx) {
     let alfalfa = {entries: {}};
     var bi = 0n;
     var read = 0n;
@@ -177,15 +210,15 @@ async function loadAlfalfaFromCanvasCtx(ctx) {
             if (len < 255) break read_entry_data;
         }
         if (k == "wing" || k == "cape") {
-            alfalfa.entries[k] = await blobToDataURL(new Blob([Uint8Array.from(entry_data)], {type: "image/png"}));
+            alfalfa.entries[k] = bytesToB64(Uint8Array.from(entry_data), "image/png");
         } else {
-            alfalfa.entries[k] = await blobToDataURL(new Blob([Uint8Array.from(entry_data)]));
+            alfalfa.entries[k] = bytesToB64(Uint8Array.from(entry_data));
         }
     }
     return alfalfa;
 }
 
-async function writeAlfalfaToCanvasCtx(alfalfa, ctx) {
+function writeAlfalfaToCanvasCtx(alfalfa, ctx) {
     let output_stream = new BigIntBitStream();
     output_stream.write(32, alfalfa_MAGIC);
     output_stream.write(8, 1); // version
@@ -205,7 +238,7 @@ async function writeAlfalfaToCanvasCtx(alfalfa, ctx) {
         }
 
         //entry data
-        let bytes = await dataUrlToBytes(val);
+        let bytes = b64ToBytes(val);
 
         let remaining = bytes.length;
         let j = 0;
@@ -238,20 +271,6 @@ async function writeAlfalfaToCanvasCtx(alfalfa, ctx) {
     }
 
     return true;
-}
-
-async function blobToDataURL(blob) {
-    var data_url;
-    const p = new Promise(resolve => {
-        var reader = new FileReader();
-        reader.onloadend = function() {
-            data_url = reader.result;
-            resolve();
-        };
-        reader.readAsDataURL(blob);
-    });
-    await p;
-    return data_url;
 }
 
 const ears_v0_pixel_values = new Map();
@@ -608,6 +627,7 @@ const model_meshes = {
         name: "Body Layer",
         texture: "base",
         group: "body",
+        invert_faces: true,
         origin: [0, 12, 0],
         position: [-4.25, 11.75, -2.25],
         size: [8.5, 12.5, 4.5],
@@ -679,6 +699,7 @@ const model_meshes = {
         name: "Head Layer",
         texture: "base",
         group: "head",
+        invert_faces: true,
         origin: [0, 24, 0],
         position: [-4.5, 23.5, -4.5],
         size: [9, 9, 9],
@@ -750,6 +771,7 @@ const model_meshes = {
         name: "Left Arm Layer",
         texture: "base",
         group: "left_arm",
+        invert_faces: true,
         origin: [-4, 24, 0],
         position: [-8.25, 11.75, -2.25],
         size: [4.5, 12.5, 4.5],
@@ -841,6 +863,7 @@ const model_meshes = {
         name: "Right Arm Layer",
         texture: "base",
         group: "right_arm",
+        invert_faces: true,
         origin: [4, 24, 0],
         position: [3.75, 11.75, -2.25],
         size: [4.5, 12.5, 4.5],
@@ -932,6 +955,7 @@ const model_meshes = {
         name: "Left Arm Layer",
         texture: "base",
         group: "left_arm",
+        invert_faces: true,
         origin: [-4, 24, 0],
         position: [-7.25, 11.75, -2.25],
         size: [3.5, 12.5, 4.5],
@@ -1023,6 +1047,7 @@ const model_meshes = {
         name: "Right Arm Layer",
         texture: "base",
         group: "right_arm",
+        invert_faces: true,
         origin: [4, 24, 0],
         position: [3.75, 11.75, -2.25],
         size: [3.5, 12.5, 4.5],
@@ -1114,6 +1139,7 @@ const model_meshes = {
         name: "Left Leg Layer",
         texture: "base",
         group: "left_leg",
+        invert_faces: true,
         origin: [2, 24, 0],
         position: [-4.25, -0.25, -2.25],
         size: [4.5, 12.5, 4.5],
@@ -1205,6 +1231,7 @@ const model_meshes = {
         name: "Right Leg Layer",
         texture: "base",
         group: "right_leg",
+        invert_faces: true,
         origin: [2, 24, 0],
         position: [-0.25, -0.25, -2.25],
         size: [4.5, 12.5, 4.5],
@@ -1884,6 +1911,7 @@ const model_meshes = {
         group: "wing_left",
         complex: true,
         is_ears: true,
+        invert_faces: true,
         position: [-2, 10, 2],
         origin: [-2, 18, 2],
         rotation: [0, -30, 0],
@@ -1907,20 +1935,6 @@ const model_meshes = {
                     wing_asymmetric_l_sd: [20, 16],
                     wing_asymmetric_l_su: [20, 0]
                 }
-            },
-            east: {
-                vertices: [
-                    "wing_asymmetric_l_su",
-                    "wing_asymmetric_l_sd",
-                    "wing_asymmetric_l_nd",
-                    "wing_asymmetric_l_nu",
-                ],
-                uv: {
-                    wing_asymmetric_l_su: [20, 0],
-                    wing_asymmetric_l_sd: [20, 16],
-                    wing_asymmetric_l_nd: [0, 16],
-                    wing_asymmetric_l_nu: [0, 0],
-                }
             }
         }
     },
@@ -1931,6 +1945,7 @@ const model_meshes = {
         group: "wing_right",
         complex: true,
         is_ears: true,
+        invert_faces: true,
         position: [2, 10, 2],
         origin: [2, 18, 2],
         rotation: [0, 30, 0],
@@ -1954,20 +1969,6 @@ const model_meshes = {
                     wing_asymmetric_r_sd: [20, 16],
                     wing_asymmetric_r_su: [20, 0]
                 }
-            },
-            east: {
-                vertices: [
-                    "wing_asymmetric_r_su",
-                    "wing_asymmetric_r_sd",
-                    "wing_asymmetric_r_nd",
-                    "wing_asymmetric_r_nu",
-                ],
-                uv: {
-                    wing_asymmetric_r_su: [20, 0],
-                    wing_asymmetric_r_sd: [20, 16],
-                    wing_asymmetric_r_nd: [0, 16],
-                    wing_asymmetric_r_nu: [0, 0],
-                }
             }
         }
     },
@@ -1978,6 +1979,7 @@ const model_meshes = {
         group: "wing_center",
         complex: true,
         is_ears: true,
+        invert_faces: true,
         position: [0, 10, 2],
         origin: [0, 18, 2],
         vertices: {
@@ -1999,20 +2001,6 @@ const model_meshes = {
                     wing_symmetric_single_nd: [0, 16],
                     wing_symmetric_single_sd: [20, 16],
                     wing_symmetric_single_su: [20, 0]
-                }
-            },
-            east: {
-                vertices: [
-                    "wing_symmetric_single_su",
-                    "wing_symmetric_single_sd",
-                    "wing_symmetric_single_nd",
-                    "wing_symmetric_single_nu",
-                ],
-                uv: {
-                    wing_symmetric_single_su: [20, 0],
-                    wing_symmetric_single_sd: [20, 16],
-                    wing_symmetric_single_nd: [0, 16],
-                    wing_symmetric_single_nu: [0, 0],
                 }
             }
         }
@@ -2052,6 +2040,7 @@ const model_meshes = {
         group: "chest",
         complex: true,
         is_ears: true,
+        invert_faces: true,
         position: [-4.25, 17.75, -2.25],
         origin: [0, 22, -2],
         vertices: {
@@ -2184,6 +2173,7 @@ const model_meshes = {
         group: "head",
         complex: true,
         is_ears: true,
+        invert_faces: true,
         origin: [0, 32, -4],
         position: [-4, 32, -4],
         rotation: [-25, 0, 0],
@@ -2206,20 +2196,6 @@ const model_meshes = {
                     horn_ed: [56, 8],
                     horn_wd: [64, 8],
                     horn_wu: [64, 0]
-                }
-            },
-            south: {
-                vertices: [
-                    "horn_wu",
-                    "horn_wd",
-                    "horn_ed",
-                    "horn_eu"
-                ],
-                uv: {
-                    horn_eu: [56, 0],
-                    horn_wu: [64, 0],
-                    horn_wd: [64, 8],
-                    horn_ed: [56, 8]
                 }
             }
         }
@@ -2870,6 +2846,14 @@ function createSimpleMesh(mesh_spec) {
             uv: face_spec.uv
         })
         f.push(face);
+        if (mesh_spec.invert_faces) {
+            const inv_face = new MeshFace(mesh, {
+                texture: getTexture(mesh_spec.texture),
+                vertices: face_spec.vertices.toReversed(),
+                uv: face_spec.uv
+            })
+            f.push(inv_face);
+        }
     };
 
     mesh.resizable = false;
@@ -2898,6 +2882,14 @@ function createComplexMesh(mesh_spec) {
             uv: face_spec.uv
         });
         f.push(face);
+        if (mesh_spec.invert_faces) {
+            const inv_face = new MeshFace(mesh, {
+                texture: getTexture(mesh_spec.texture),
+                vertices: face_spec.vertices.toReversed(),
+                uv: face_spec.uv
+            })
+            f.push(inv_face);
+        }
     };
 
     mesh.resizable = false;
@@ -3290,7 +3282,7 @@ BBPlugin.register('ears_manipulator', {
     description: "Edit skins to use with unascribed's Ears mod.",
     tags: ["Minecraft: Java Edition", "Ears"],
     version: "0.0.1",
-    variant: "both",
+    variant: "desktop",
     await_loading: true,
     creation_date: "2024-07-13",
     onload() {
@@ -3934,8 +3926,8 @@ BBPlugin.register('ears_manipulator', {
                 include_author: {type: 'checkbox', label: "Embed author name in Alfalfa", value: true},
                 author: {type: 'text', label: "Author"}
             },
-            remember: false,
-            async compile(options) {
+            remember: true,
+            compile(options) {
                 if (options === undefined) {
                     options = Object.assign(this.getExportOptions(), options);
                 }
@@ -3945,15 +3937,15 @@ BBPlugin.register('ears_manipulator', {
 
                 if (options.include_author && options.author) {
                     let encoder = new TextEncoder();
-                    Project.ears_alfalfa.entries["author"] = await blobToDataURL(new Blob([encoder.encode(options.author)]));
+                    Project.ears_alfalfa.entries["author"] = bytesToB64(encoder.encode(options.author));
                 }
 
                 if (Project.ears_settings.wings_mode != "none" && getTexture("wing")) {
-                    Project.ears_alfalfa.entries["wing"] = getTexture("wing").canvas.toDataURL();
+                    Project.ears_alfalfa.entries["wing"] = extractDataFromDataUrl(getTexture("wing").canvas.toDataURL());
                 }
 
                 if (Project.ears_settings.cape && getTexture("cape")) {
-                    Project.ears_alfalfa.entries["cape"] = getTexture("cape").canvas.toDataURL();
+                    Project.ears_alfalfa.entries["cape"] = extractDataFromDataUrl(getTexture("cape").canvas.toDataURL());
                 }
 
                 let canvas = Interface.createElement("canvas", {height: "64", width: "64"});
@@ -3962,12 +3954,12 @@ BBPlugin.register('ears_manipulator', {
                 let base_skin_data = getTexture("base").ctx.getImageData(0, 0, 64, 64);
                 ctx.putImageData(base_skin_data, 0, 0);
 
-                await writeAlfalfaToCanvasCtx(Project.ears_alfalfa, ctx);
+                let alfalfa_success = writeAlfalfaToCanvasCtx(Project.ears_alfalfa, ctx);
 
+                if (!alfalfa_success) {
+                    // Warning
+                }
                 return canvas.toDataURL();
-            },
-            async write(content, path) {
-                Blockbench.writeFile(path, {savetype: "image", content: await content})
             }
         })
         toDelete.push(ears_codec);
@@ -4068,20 +4060,26 @@ BBPlugin.register('ears_manipulator', {
                             canvas_ctx.putImageData(ears_square, 0, 32);
                         }
 
-                        Project.ears_alfalfa = await loadAlfalfaFromCanvasCtx(canvas_ctx);
+                        Project.ears_alfalfa = loadAlfalfaFromCanvasCtx(canvas_ctx);
 
-                        const base_texture = new Texture({name: "base", id: "base", width: 64, height: 64}).fromDataURL(canvas.toDataURL()).add();
+                        const base_texture = new Texture({name: "base", id: "base", width: 64, height: 64})
+                            .fromDataURL(canvas.toDataURL())
+                            .add();
                         base_texture.uv_width = 64;
                         base_texture.uv_height = 64;
 
                         if (Project.ears_alfalfa.entries["wing"]) {
-                            const wing_texture = new Texture({name: "wing", id: "wing", width: 20, height: 16}).fromDataURL(Project.ears_alfalfa.entries["wing"]).add();
+                            const wing_texture = new Texture({name: "wing", id: "wing", width: 20, height: 16})
+                                .fromDataURL(b64ToDataUrl(Project.ears_alfalfa.entries["wing"], "image/png"))
+                                .add();
                             wing_texture.uv_width = 20;
                             wing_texture.uv_height = 16;
                         }
 
                         if (Project.ears_alfalfa.entries["cape"]) {
-                            const wing_texture = new Texture({name: "cape", id: "cape", width: 20, height: 16}).fromDataURL(Project.ears_alfalfa.entries["cape"]).add();
+                            const wing_texture = new Texture({name: "cape", id: "cape", width: 20, height: 16})
+                                .fromDataURL(b64ToDataUtl(Project.ears_alfalfa.entries["cape"], "image/png"))
+                                .add();
                             wing_texture.uv_width = 20;
                             wing_texture.uv_height = 16;
                         }
@@ -4098,7 +4096,9 @@ BBPlugin.register('ears_manipulator', {
 
                         Canvas.updateAll();
                     } else {
-                        const base_texture = new Texture({name: "base", id: "base", width: 64, height: 64}).fromDataURL("data:image/png;base64," + (Project.skin_slim ? default_texture_slim : default_texture_wide)).add();
+                        const base_texture = new Texture({name: "base", id: "base", width: 64, height: 64})
+                            .fromDataURL(b64ToDataUrl(Project.skin_slim ? default_texture_slim : default_texture_wide, "image/png"))
+                            .add();
                         base_texture.uv_width = 64;
                         base_texture.uv_height = 64;
                     }
