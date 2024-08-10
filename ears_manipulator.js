@@ -183,7 +183,7 @@ function loadAlfalfaFromCanvasCtx(ctx) {
             if (index < alfalfa_predef_keys.length) {
                 k = alfalfa_predef_keys[index];
             } else {
-                k = "!unk" + index;
+                k = `!unk${index}`;
             }
         } else {
             // custom keys (strings)
@@ -2256,13 +2256,13 @@ function createTail(selected, uuid) {
         origin = -Project.ears_settings.tail_bend_1 > 0 ? [0, 18, 2] : [0, 10, 2];
         position = [0, 10, 2];
         for (let i = segments; i > 0; i--) {
-            vertices["tail_segment_" + i + "_0"] = [0, 8, i * segment_length];
-            vertices["tail_segment_" + i + "_1"] = [0, 0, i * segment_length];
+            vertices[`tail_segment_${i}_0`] = [0, 8, i * segment_length];
+            vertices[`tail_segment_${i}_1`] = [0, 0, i * segment_length];
             for (let [k, v] of Object.entries(vertices)) {
                 if (i > 1) {
-                    vertices[k] = rotatePoint3(v, -Project.ears_settings["tail_bend_" + i], 1, [0, 0, (i - 1) * segment_length]);
+                    vertices[k] = rotatePoint3(v, -Project.ears_settings[`tail_bend_${i}`], 1, [0, 0, (i - 1) * segment_length]);
                 } else {
-                    vertices[k] = rotatePoint3(v, -Project.ears_settings["tail_bend_" + i], 0, [0, origin[1] - 10, 0]);
+                    vertices[k] = rotatePoint3(v, -Project.ears_settings[`tail_bend_${i}`], 0, [0, origin[1] - 10, 0]);
                 }
             }
         }
@@ -2272,10 +2272,10 @@ function createTail(selected, uuid) {
         origin = [0, 14, 2];
         position = [0, 14, 2];
         for (let i = segments; i > 0; i--) {
-            vertices["tail_segment_" + i + "_0"] = [4, 0, i * segment_length];
-            vertices["tail_segment_" + i + "_1"] = [-4, 0, i * segment_length];
+            vertices[`tail_segment_${i}_0`] = [4, 0, i * segment_length];
+            vertices[`tail_segment_${i}_1`] = [-4, 0, i * segment_length];
             for (let [k, v] of Object.entries(vertices)) {
-                vertices[k] = rotatePoint3(v, -Project.ears_settings["tail_bend_" + i], 0, [0, 0, (i - 1) * segment_length]);
+                vertices[k] = rotatePoint3(v, -Project.ears_settings[`tail_bend_${i}`], 0, [0, 0, (i - 1) * segment_length]);
             }
         }
         vertices["tail_segment_0_0"] = [4, 0, 0];
@@ -2312,31 +2312,31 @@ function createTail(selected, uuid) {
         faces.push(new MeshFace(mesh, {
             texture,
             vertices: [
-                "tail_segment_" + i + "_0",
-                "tail_segment_" + i + "_1",
-                "tail_segment_" + (i+1) + "_1",
-                "tail_segment_" + (i+1) + "_0"
+                `tail_segment_${i}_0`,
+                `tail_segment_${i}_1`,
+                `tail_segment_${i+1}_1`,
+                `tail_segment_${i+1}_0`
             ],
             uv: {
-                ["tail_segment_" + i + "_0"]: [64, 16 + i * segment_length],
-                ["tail_segment_" + i + "_1"]: [56, 16 + i * segment_length],
-                ["tail_segment_" + (i+1) + "_1"]: [56, 16 + (i+1) * segment_length],
-                ["tail_segment_" + (i+1) + "_0"]: [64, 16 + (i+1) * segment_length]
+                [`tail_segment_${i}_0`]: [64, 16 + i * segment_length],
+                [`tail_segment_${i}_1`]: [56, 16 + i * segment_length],
+                [`tail_segment_${i+1}_1`]: [56, 16 + (i+1) * segment_length],
+                [`tail_segment_${i+1}_0`]: [64, 16 + (i+1) * segment_length]
             }
         }));
         faces.push(new MeshFace(mesh, {
             texture,
             vertices: [
-                "tail_segment_" + (i+1) + "_0",
-                "tail_segment_" + (i+1) + "_1",
-                "tail_segment_" + i + "_1",
-                "tail_segment_" + i + "_0"
+                `tail_segment_${i+1}_0`,
+                `tail_segment_${i+1}_1`,
+                `tail_segment_${i}_1`,
+                `tail_segment_${i}_0`
             ],
             uv: {
-                ["tail_segment_" + (i+1) + "_0"]: [64, 16 + (i+1) * segment_length],
-                ["tail_segment_" + (i+1) + "_1"]: [56, 16 + (i+1) * segment_length],
-                ["tail_segment_" + i + "_1"]: [56, 16 + i * segment_length],
-                ["tail_segment_" + i + "_0"]: [64, 16 + i * segment_length]
+                [`tail_segment_${i+1}_0`]: [64, 16 + (i+1) * segment_length],
+                [`tail_segment_${i+1}_1`]: [56, 16 + (i+1) * segment_length],
+                [`tail_segment_${i}_1`]: [56, 16 + i * segment_length],
+                [`tail_segment_${i}_0`]: [64, 16 + i * segment_length]
             }
         }));
     }
@@ -2710,14 +2710,14 @@ function createSimpleMesh(mesh_spec) {
 
     // n: north, z-; s: south, z+; w: west, x-; e: east, x+; d: down, y-; u: up, y+
     const vertices = {
-        [mesh_spec.id + "_nwd"]: [dx, dy, dz],
-        [mesh_spec.id + "_ned"]: [dx + width, dy, dz],
-        [mesh_spec.id + "_nwu"]: [dx, dy + height, dz],
-        [mesh_spec.id + "_neu"]: [dx + width, dy + height, dz],
-        [mesh_spec.id + "_swd"]: [dx, dy, dz + depth],
-        [mesh_spec.id + "_sed"]: [dx + width, dy, dz + depth],
-        [mesh_spec.id + "_swu"]: [dx, dy + height, dz + depth],
-        [mesh_spec.id + "_seu"]: [dx + width, dy + height, dz + depth]
+        [`${mesh_spec.id}_nwd`]: [dx, dy, dz],
+        [`${mesh_spec.id}_ned`]: [dx + width, dy, dz],
+        [`${mesh_spec.id}_nwu`]: [dx, dy + height, dz],
+        [`${mesh_spec.id}_neu`]: [dx + width, dy + height, dz],
+        [`${mesh_spec.id}_swd`]: [dx, dy, dz + depth],
+        [`${mesh_spec.id}_sed`]: [dx + width, dy, dz + depth],
+        [`${mesh_spec.id}_swu`]: [dx, dy + height, dz + depth],
+        [`${mesh_spec.id}_seu`]: [dx + width, dy + height, dz + depth]
     }
 
     var faces = {};
@@ -2729,16 +2729,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.down.size;
         faces.down = {
             vertices: [
-                mesh_spec.id + "_nwd",
-                mesh_spec.id + "_ned",
-                mesh_spec.id + "_sed",
-                mesh_spec.id + "_swd"
+                `${mesh_spec.id}_nwd`,
+                `${mesh_spec.id}_ned`,
+                `${mesh_spec.id}_sed`,
+                `${mesh_spec.id}_swd`
             ],
             uv: {
-                [mesh_spec.id + "_nwd"]: [u + du, v + dv],
-                [mesh_spec.id + "_ned"]: [u, v + dv],
-                [mesh_spec.id + "_sed"]: [u, v],
-                [mesh_spec.id + "_swd"]: [u + du, v],
+                [`${mesh_spec.id}_nwd`]: [u + du, v + dv],
+                [`${mesh_spec.id}_ned`]: [u, v + dv],
+                [`${mesh_spec.id}_sed`]: [u, v],
+                [`${mesh_spec.id}_swd`]: [u + du, v],
             }
         };
     }
@@ -2748,16 +2748,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.up.size;
         faces.up = {
             vertices: [
-                mesh_spec.id + "_nwu",
-                mesh_spec.id + "_swu",
-                mesh_spec.id + "_seu",
-                mesh_spec.id + "_neu"
+                `${mesh_spec.id}_nwu`,
+                `${mesh_spec.id}_swu`,
+                `${mesh_spec.id}_seu`,
+                `${mesh_spec.id}_neu`
             ],
             uv: {
-                [mesh_spec.id + "_nwu"]: [u + du, v + dv],
-                [mesh_spec.id + "_swu"]: [u + du, v],
-                [mesh_spec.id + "_seu"]: [u, v],
-                [mesh_spec.id + "_neu"]: [u, v + dv],
+                [`${mesh_spec.id}_nwu`]: [u + du, v + dv],
+                [`${mesh_spec.id}_swu`]: [u + du, v],
+                [`${mesh_spec.id}_seu`]: [u, v],
+                [`${mesh_spec.id}_neu`]: [u, v + dv],
             }
         };
     }
@@ -2768,16 +2768,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.west.size;
         faces.west = {
             vertices: [
-                mesh_spec.id + "_nwu",
-                mesh_spec.id + "_nwd",
-                mesh_spec.id + "_swd",
-                mesh_spec.id + "_swu"
+                `${mesh_spec.id}_nwu`,
+                `${mesh_spec.id}_nwd`,
+                `${mesh_spec.id}_swd`,
+                `${mesh_spec.id}_swu`
             ],
             uv: {
-                [mesh_spec.id + "_nwu"]: [u, v],
-                [mesh_spec.id + "_nwd"]: [u, v + dv],
-                [mesh_spec.id + "_swd"]: [u + du, v + dv],
-                [mesh_spec.id + "_swu"]: [u + du, v],
+                [`${mesh_spec.id}_nwu`]: [u, v],
+                [`${mesh_spec.id}_nwd`]: [u, v + dv],
+                [`${mesh_spec.id}_swd`]: [u + du, v + dv],
+                [`${mesh_spec.id}_swu`]: [u + du, v],
             }
         };
     };
@@ -2787,16 +2787,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.east.size;
         faces.east = {
             vertices: [
-                mesh_spec.id + "_seu",
-                mesh_spec.id + "_sed",
-                mesh_spec.id + "_ned",
-                mesh_spec.id + "_neu"
+                `${mesh_spec.id}_seu`,
+                `${mesh_spec.id}_sed`,
+                `${mesh_spec.id}_ned`,
+                `${mesh_spec.id}_neu`
             ],
             uv: {
-                [mesh_spec.id + "_seu"]: [u, v],
-                [mesh_spec.id + "_sed"]: [u, v + dv],
-                [mesh_spec.id + "_ned"]: [u + du, v + dv],
-                [mesh_spec.id + "_neu"]: [u + du, v],
+                [`${mesh_spec.id}_seu`]: [u, v],
+                [`${mesh_spec.id}_sed`]: [u, v + dv],
+                [`${mesh_spec.id}_ned`]: [u + du, v + dv],
+                [`${mesh_spec.id}_neu`]: [u + du, v],
             }
         };
     };
@@ -2806,16 +2806,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.north.size;
         faces.north = {
             vertices: [
-                mesh_spec.id + "_neu",
-                mesh_spec.id + "_ned",
-                mesh_spec.id + "_nwd",
-                mesh_spec.id + "_nwu"
+                `${mesh_spec.id}_neu`,
+                `${mesh_spec.id}_ned`,
+                `${mesh_spec.id}_nwd`,
+                `${mesh_spec.id}_nwu`
             ],
             uv: {
-                [mesh_spec.id + "_neu"]: [u, v],
-                [mesh_spec.id + "_ned"]: [u, v + dv],
-                [mesh_spec.id + "_nwd"]: [u + du, v + dv],
-                [mesh_spec.id + "_nwu"]: [u + du, v],
+                [`${mesh_spec.id}_neu`]: [u, v],
+                [`${mesh_spec.id}_ned`]: [u, v + dv],
+                [`${mesh_spec.id}_nwd`]: [u + du, v + dv],
+                [`${mesh_spec.id}_nwu`]: [u + du, v],
             }
         };
     }
@@ -2825,16 +2825,16 @@ function createSimpleMesh(mesh_spec) {
         [du, dv] = mesh_spec.uv.south.size;
         faces.south = {
             vertices: [
-                mesh_spec.id + "_swu",
-                mesh_spec.id + "_swd",
-                mesh_spec.id + "_sed",
-                mesh_spec.id + "_seu"
+                `${mesh_spec.id}_swu`,
+                `${mesh_spec.id}_swd`,
+                `${mesh_spec.id}_sed`,
+                `${mesh_spec.id}_seu`
             ],
             uv: {
-                [mesh_spec.id + "_swu"]: [u, v],
-                [mesh_spec.id + "_swd"]: [u, v + dv],
-                [mesh_spec.id + "_sed"]: [u + du, v + dv],
-                [mesh_spec.id + "_seu"]: [u + du, v],
+                [`${mesh_spec.id}_swu`]: [u, v],
+                [`${mesh_spec.id}_swd`]: [u, v + dv],
+                [`${mesh_spec.id}_sed`]: [u + du, v + dv],
+                [`${mesh_spec.id}_seu`]: [u + du, v],
             }
         };
     };
