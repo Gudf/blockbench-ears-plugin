@@ -2355,6 +2355,11 @@ function createTail(selected, uuid) {
     mesh.addFaces(...faces);
     mesh.init();
 
+    Canvas.updateView({
+        elements: [mesh, tail],
+        groups: [tail]
+    })
+
     if (selected) tail.select();
 }
 
@@ -2640,6 +2645,11 @@ function createSnout(selected, uuid) {
     mesh.addFaces(...f);
     mesh.init();
 
+    Canvas.updateView({
+        elements: [mesh, snout],
+        groups: [snout]
+    })
+
     if (selected) snout.select();
 }
 
@@ -2860,6 +2870,10 @@ function createSimpleMesh(mesh_spec) {
 
     mesh.addFaces(...f);
     mesh.init();
+    Canvas.updateView({
+        elements: [mesh, parent],
+        groups: [parent]
+    })
     return mesh;
 }
 
@@ -2896,6 +2910,10 @@ function createComplexMesh(mesh_spec) {
 
     mesh.addFaces(...f);
     mesh.init();
+    Canvas.updateView({
+        elements: [mesh, parent],
+        groups: [parent]
+    })
     return mesh;
 }
 
