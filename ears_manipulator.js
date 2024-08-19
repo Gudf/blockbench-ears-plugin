@@ -1,5 +1,7 @@
 (function () {
 
+const PLUGIN_ID = "ears_manipulator";
+const PLUGIN_VERSION = "0.1.0";
 const FORMAT_ID = "ears_skin";
 
 var format, panel;
@@ -3341,13 +3343,13 @@ const panel_css = `#panel_ears_manipulator {
 }
 `
 
-BBPlugin.register('ears_manipulator', {
+BBPlugin.register(PLUGIN_ID, {
     title: "Blockbench Ears Manipulator",
     author: "Gudf",
     icon: "icon",
     description: "Edit skins to use with unascribed's Ears mod.",
     tags: ["Minecraft: Java Edition", "Ears"],
-    version: "0.0.1",
+    version: PLUGIN_VERSION,
     variant: "desktop",
     await_loading: true,
     creation_date: "2024-07-13",
@@ -3420,7 +3422,7 @@ BBPlugin.register('ears_manipulator', {
                 Canvas.updateVisibility();
             }
         })
-        toDelete.push(layer_toggle);
+        toDelete.push(ears_visibility_toggle);
 
         let outliner = Toolbars.outliner;
         let layer_toggle_index = outliner.children.findIndex(e => e.id == 'toggle_skin_layer');
@@ -4770,12 +4772,12 @@ BBPlugin.register('ears_manipulator', {
     },
     onunload() {
         for (const deletable of toDelete) deletable.delete();
-        for (var {addedTo, e, callback} of eventListeners) {
+        for (let {addedTo, e, callback} of eventListeners) {
             addedTo.removeListener(e, callback);
         }
         let outliner = Toolbars.outliner;
         var to_remove;
-        while ((to_remove = outliner.children.findIndex(e => e.id.startsWith("ears_toggle_"))) >= 0) {
+        while ((to_remove = outliner.children.findIndex((c) => c.id && c.id.startsWith("ears_toggle_"))) >= 0) {
             outliner.children.splice(to_remove, 1);
         }
     }
