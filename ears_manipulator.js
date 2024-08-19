@@ -1,5 +1,7 @@
 (function () {
 
+const FORMAT_ID = "ears_skin";
+
 var format, panel;
 var eventListeners = [];
 
@@ -70,7 +72,6 @@ class BigIntBitStream {
     }
 }
 
-const alfalfa_pixels_number = 1568;
 const alfalfa_max_bytes = 1372; // 7 bits of the alpha channel per pixel
 const alfalfa_predef_keys = ["END", "wing", "erase", "cape"];
 const alfalfa_MAGIC = 0xEA1FA1FA; // EALFALFA
@@ -225,6 +226,8 @@ function writeAlfalfaToCanvasCtx(alfalfa, ctx) {
 
     write_entries: for (const [key, val] of Object.entries(alfalfa.entries)) {
         // entry key
+        if (key == "cape" && !Project?.ears_settings?.cape) continue write_entries;
+        if (key == "wing" && Project?.ears_settings?.wings_mode == "none") continue write_entries;
         let i = alfalfa_predef_keys.indexOf(key);
         if (i >= 0) {
             output_stream.write(8, i)
@@ -571,6 +574,7 @@ function writeEarsSettingsToTexture(tex) {
     } else {
         tex.ctx.clearRect(0, 32, 4, 4);
     }
+    return tex;
 }
 
 // sample textures from the Ears Manipulator (https://ears.unascribed.com/manipulator/)
@@ -2240,7 +2244,7 @@ function createMesh(mesh_spec) {
 function createEmptyTexture(id, width, height) {
     if (getTexture(id)) return;
     var canvas = Interface.createElement('canvas', {width, height});
-    let t = new Texture({name: "id", id, width, height}).fromDataURL(canvas.toDataURL()).add();
+    let t = new Texture({name: id, id, width, height}).fromDataURL(canvas.toDataURL()).add();
     t.uv_width = width;
     t.uv_height = height;
     canvas.remove();
@@ -2248,7 +2252,7 @@ function createEmptyTexture(id, width, height) {
 }
 
 function createTail(selected, uuid) {
-    if (!Project.ears_settings.enabled || Project.ears_settings.tail_mode == "none") return;
+    if (!Project.ears_settings.enabled || Project.ears_settings.tail_mode == "none") return {elements: [], outliner: true};
     var origin, position, vertices = {};
     const segments = Project.ears_settings.tail_segments;
     let segment_length = (12 / segments);
@@ -2306,6 +2310,8 @@ function createTail(selected, uuid) {
         vertices: vertices
     });
 
+    mesh.is_ears = true;
+
     mesh.transferOrigin(origin);
 
     for (let i = 0; i < segments; i++) {
@@ -2356,26 +2362,29 @@ function createTail(selected, uuid) {
     mesh.init();
 
     Canvas.updateView({
-        elements: [mesh, tail],
+        elements: [mesh],
         groups: [tail]
     })
 
     if (selected) tail.select();
+
+    return {elements: [mesh], outliner: true};
 }
 
 function createChest() {
-    if (!Project.ears_settings.enabled || !Project.ears_settings.chest) return;
-    var chest = getOrCreateGroup("chest");
-    createMesh(model_meshes.chest);
-    createMesh(model_meshes.chest_outer);
+    if (!Project.ears_settings.enabled || !Project.ears_settings.chest) return {elements: [], outliner: true};
+    let chest = getOrCreateGroup("chest");
+    let chest_mesh = createMesh(model_meshes.chest);
+    let chest_mesh_outer = createMesh(model_meshes.chest_outer);
     chest.rotation = [Project.ears_settings.chest_size * 45 / 100, 0, 0];
     Canvas.updateView({
         groups: [chest]
     });
+    return {elements: [chest_mesh, chest_mesh_outer], outliner: true};
 }
 
 function createEars() {
-    if (!Project.ears_settings.enabled || Project.ears_settings.ears_mode == "none") return;
+    if (!Project.ears_settings.enabled || Project.ears_settings.ears_mode == "none") return {elements: [], outliner: true};
     meshes = {};
     switch (Project.ears_settings.ears_mode) {
         case "around":
@@ -2457,10 +2466,12 @@ function createEars() {
         groups: [getGroup("ears_top"), getGroup("ears_left"), getGroup("ears_right")].filter(g => g),
         elements: Object.values(meshes)
     })
+
+    return {elements: Object.values(meshes), outliner: true}
 }
 
 function createSnout(selected, uuid) {
-    if (!Project.ears_settings.enabled || !Project.ears_settings.snout) return;
+    if (!Project.ears_settings.enabled || !Project.ears_settings.snout) return {elements: [], outliner: true};
     let w = Project.ears_settings.snout_width;
     let h = Project.ears_settings.snout_height;
     let l = Project.ears_settings.snout_length;
@@ -2634,6 +2645,8 @@ function createSnout(selected, uuid) {
         vertices
     }).addTo(snout);
 
+    mesh.is_ears = true;
+
     var f = Object.values(faces).map( (face_spec) => new MeshFace(mesh, {
         texture,
         vertices: face_spec.vertices,
@@ -2646,60 +2659,69 @@ function createSnout(selected, uuid) {
     mesh.init();
 
     Canvas.updateView({
-        elements: [mesh, snout],
+        elements: [mesh],
         groups: [snout]
     })
 
     if (selected) snout.select();
+
+    return {elements: [mesh], outliner: true}
 }
 
 function createProtrusions() {
-    if (!Project.ears_settings.enabled) return;
+    if (!Project.ears_settings.enabled) return {elements: [], outliner: true};
+    let elements = [];
     if (Project.ears_settings.protrusions == "claws"
      || Project.ears_settings.protrusions == "both"
     ) {
-        createMesh(model_meshes["left_leg_claw"]);
-        createMesh(model_meshes["right_leg_claw"]);
-        createMesh(model_meshes[Project.skin_slim ? "left_arm_slim_claw" : "left_arm_claw"]);
-        createMesh(model_meshes[Project.skin_slim ? "right_arm_slim_claw" : "right_arm_claw"]);
+        elements.push(createMesh(model_meshes["left_leg_claw"]));
+        elements.push(createMesh(model_meshes["right_leg_claw"]));
+        elements.push(createMesh(model_meshes[Project.skin_model == "alex" ? "left_arm_slim_claw" : "left_arm_claw"]));
+        elements.push(createMesh(model_meshes[Project.skin_model == "alex" ? "right_arm_slim_claw" : "right_arm_claw"]));
     }
 
     if (Project.ears_settings.protrusions == "horn"
      || Project.ears_settings.protrusions == "both"
     ) {
-        createMesh(model_meshes.horn);
+        elements.push(createMesh(model_meshes.horn));
     }
+    return {elements, outliner: true};
 }
 
 function createWings() {
-    if (!Project.ears_settings.enabled || Project.ears_settings.wings_mode == "none") return;
+    if (!Project.ears_settings.enabled || Project.ears_settings.wings_mode == "none") return {elements: [], textures: [], outliner: true};
+    let textures = [];
+    let elements = [];
     if (!getTexture("wing")) {
-        createEmptyTexture("wing", 20, 16);
+        textures.push(createEmptyTexture("wing", 20, 16));
     }
     if (Project.ears_settings.wings_mode == "symmetric_dual"
      || Project.ears_settings.wings_mode == "asymmetric_single_l"
     ) {
-        createMesh(model_meshes.wing_asymmetric_l);
+        elements.push(createMesh(model_meshes.wing_asymmetric_l));
     }
     if (Project.ears_settings.wings_mode == "symmetric_dual"
         || Project.ears_settings.wings_mode == "asymmetric_single_r"
     ) {
-        createMesh(model_meshes.wing_asymmetric_r);
+        elements.push(createMesh(model_meshes.wing_asymmetric_r));
     }
     if (Project.ears_settings.wings_mode == "symmetric_single") {
-        createMesh(model_meshes.wing_symmetric_single);
+        elements.push(createMesh(model_meshes.wing_symmetric_single));
     }
+
+    return {elements, textures, outliner: true};
 }
 
 function createCape(selected, uuid) {
-    if (!Project.ears_settings.enabled || !Project.ears_settings.cape) return;
+    if (!Project.ears_settings.enabled || !Project.ears_settings.cape) return {elements: [], textures: [], outliner: true};
+    let textures = [];
     if (!getTexture("cape")) {
-        createEmptyTexture("cape", 20, 16);
+        textures.push(createEmptyTexture("cape", 20, 16));
     }
     let cape = createGroup(model_groups.cape, uuid)
-    let m = createMesh(model_meshes.cape);
+    let cape_mesh = createMesh(model_meshes.cape);
     if (selected) cape.select();
-    return m;
+    return {elements: [cape_mesh], textures, outliner: true};
 }
 
 function createSimpleMesh(mesh_spec) {
@@ -2848,6 +2870,8 @@ function createSimpleMesh(mesh_spec) {
         rotation: mesh_spec.rotation
     }).addTo(parent);
 
+    mesh.is_ears = mesh_spec.is_ears || false;
+
     var f = [];
     for (const [_, face_spec] of Object.entries(faces)) {
         const face = new MeshFace(mesh, {
@@ -2871,7 +2895,7 @@ function createSimpleMesh(mesh_spec) {
     mesh.addFaces(...f);
     mesh.init();
     Canvas.updateView({
-        elements: [mesh, parent],
+        elements: [mesh],
         groups: [parent]
     })
     return mesh;
@@ -2886,6 +2910,8 @@ function createComplexMesh(mesh_spec) {
         vertices: mesh_spec.vertices,
         rotation: mesh_spec.rotation
     }).addTo(parent);
+
+    mesh.is_ears = mesh_spec.is_ears || false;
 
     var f = [];
 
@@ -2911,7 +2937,7 @@ function createComplexMesh(mesh_spec) {
     mesh.addFaces(...f);
     mesh.init();
     Canvas.updateView({
-        elements: [mesh, parent],
+        elements: [mesh],
         groups: [parent]
     })
     return mesh;
@@ -3072,29 +3098,29 @@ function getOrCreateGroup(id) {
 
 function updateEars() {
     let head_group = getOrCreateGroup("head");
-    head_group.children.filter((child) => {
-        return child.name.includes("Ear");
-    }).forEach((c) => c.remove());
-    createEars();
+    head_group.children
+        .filter((child) => child.name.includes("Ear"))
+        .forEach((c) => c.remove());
+    return createEars();
 }
 
-function updateTail() {
+function updateTail(standalone = true) {
     let tail = getGroup("tail");
     let selected = tail?.selected;
     let uuid = tail?.uuid;
     tail?.remove();
-    createTail(selected, uuid);
+    return createTail(selected, uuid);
 }
 
-function updateSnout() {
+function updateSnout(standalone = true) {
     let snout = getGroup("snout");
     let selected = snout?.selected;
     let uuid = snout?.uuid;
     snout?.remove();
-    createSnout(selected, uuid);
+    return createSnout(selected, uuid);
 }
 
-function updateProtrusions() {
+function updateProtrusions(standalone = true) {
     let claw_groups = ["left_arm", "right_arm", "left_leg", "right_leg"];
     claw_groups.map(getOrCreateGroup).forEach((group) => {
         group.children.filter((child) => {
@@ -3106,17 +3132,17 @@ function updateProtrusions() {
     head_group.children.filter((child) => {
         return child instanceof Mesh && child.name.startsWith("Horn");
     }).forEach((c) => c.remove());
-    createProtrusions();
+    return createProtrusions();
 }
 
-function updateWings() {
+function updateWings(standalone = true) {
     let body_group = getOrCreateGroup("body");
     body_group.children.filter((child) => child.name.includes("Wing"))
         .forEach((c) => c.remove());
-    createWings();
+    return createWings();
 }
 
-function updateChest() {
+function updateChest(standalone = true) {
     let chest_group = getGroup("chest");
     if (chest_group) {
         if (Project.ears_settings.enabled && Project.ears_settings.chest) {
@@ -3124,61 +3150,83 @@ function updateChest() {
             Canvas.updateView({
                 groups: [chest_group]
             });
+            let elements = [...chest_group.children];
+            return {elements, outliner: true}
         } else {
             chest_group.remove();
+            return {elements: [], outliner: true}
         }
     } else {
-        createChest();
+        return createChest();
     }
 }
 
-function updateCape() {
+function updateCape(standalone = true) {
     let cape = getGroup("cape");
     let selected = cape?.selected;
     let uuid = cape?.uuid;
     cape?.remove();
-    createCape(selected, uuid);
+    return createCape(selected, uuid);
 }
 
+
+
 function updateAllEarsFeatures() {
-    updateEars();
-    updateProtrusions();
-    updateTail();
-    updateSnout();
-    updateChest();
-    updateWings();
-    updateCape();
+    let elements = [];
+    let textures = [];
+    elements.push(...(updateEars().elements));
+    elements.push(...(updateProtrusions().elements));
+    elements.push(...(updateTail().elements));
+    elements.push(...(updateSnout().elements));
+    elements.push(...(updateChest().elements));
+    let wings_change = updateWings();
+    elements.push(...(wings_change.elements));
+    textures.push(...(wings_change.textures))
+    let cape_change = updateCape();
+    elements.push(...(cape_change.elements));
+    textures.push(...(cape_change.textures));
+    return {elements, textures, outliner: true};
 }
 
 function updateArmsWidth() {
+    let uuids = {};
     let left_arm = getOrCreateGroup("left_arm");
-    left_arm.children.map((c) => c).forEach((c) => c.remove());
     let right_arm = getOrCreateGroup("right_arm");
-    right_arm.children.map((c) => c).forEach((c) => c.remove());
 
-    if (Project.skin_slim) {
-        createMesh(model_meshes.left_arm_slim);
-        createMesh(model_meshes.left_arm_slim_outer);
+    left_arm.children.map((c) => c).forEach((c) => {uuids[c.name] = c.uuid; c.remove()});
+    right_arm.children.map((c) => c).forEach((c) => {uuids[c.name] = c.uuid; c.remove()});
+
+    let elements = [];
+
+    if (Project.skin_model == "alex") {
+        elements.push(createMesh(model_meshes.left_arm_slim, uuids[model_meshes.left_arm_slim.name]));
+        elements.push(createMesh(model_meshes.left_arm_slim_outer, uuids[model_meshes.left_arm_slim_outer.name]));
         if (Project.ears_settings.enabled && (Project.ears_settings.protrusions == "claws" || Project.ears_settings.protrusions == "both")) {
-            createMesh(model_meshes.left_arm_slim_claw);
+            elements.push(createMesh(model_meshes.left_arm_slim_claw, uuids[model_meshes.left_arm_slim_claw.name]));
         }
-        createMesh(model_meshes.right_arm_slim);
-        createMesh(model_meshes.right_arm_slim_outer);
+        elements.push(createMesh(model_meshes.right_arm_slim, uuids[model_meshes.right_arm_slim.name]));
+        elements.push(createMesh(model_meshes.right_arm_slim_outer, uuids[model_meshes.right_arm_slim_outer.name]));
         if (Project.ears_settings.enabled && (Project.ears_settings.protrusions == "claws" || Project.ears_settings.protrusions == "both")) {
-            createMesh(model_meshes.right_arm_slim_claw);
+            elements.push(createMesh(model_meshes.right_arm_slim_claw, uuids[model_meshes.right_arm_slim_claw.name]));
         }
     } else {
-        createMesh(model_meshes.left_arm);
-        createMesh(model_meshes.left_arm_outer);
+        elements.push(createMesh(model_meshes.left_arm, uuids[model_meshes.left_arm.name]));
+        elements.push(createMesh(model_meshes.left_arm_outer, uuids[model_meshes.left_arm_outer.name]));
         if (Project.ears_settings.enabled && (Project.ears_settings.protrusions == "claws" || Project.ears_settings.protrusions == "both")) {
-            createMesh(model_meshes.left_arm_claw);
+            elements.push(createMesh(model_meshes.left_arm_claw, uuids[model_meshes.left_arm_claw.name]));
         }
-        createMesh(model_meshes.right_arm);
-        createMesh(model_meshes.right_arm_outer);
+        elements.push(createMesh(model_meshes.right_arm, uuids[model_meshes.right_arm.name]));
+        elements.push(createMesh(model_meshes.right_arm_outer, uuids[model_meshes.right_arm_outer.name]));
         if (Project.ears_settings.enabled && (Project.ears_settings.protrusions == "claws" || Project.ears_settings.protrusions == "both")) {
-            createMesh(model_meshes.right_arm_claw);
+            elements.push(createMesh(model_meshes.right_arm_claw, uuids[model_meshes.right_arm_claw.name]));
         }
     }
+
+    return elements
+}
+
+function getAllEarsMeshes() {
+ return Mesh.all.filter((m) => m.is_ears)
 }
 
 const panel_css = `#panel_ears_manipulator {
@@ -3307,8 +3355,7 @@ BBPlugin.register('ears_manipulator', {
         var css = Blockbench.addCSS(panel_css);
         toDelete.push(css);
 
-        let project_done_loading = new Property(ModelProject, "boolean", "project_done_loading", {default: false, exposed: false, condition: {formats: ["ears"]}});
-        let skin_slim = new Property(ModelProject, "boolean", "skin_slim", {default: false, exposed: true, label: "Use a slim model", condition: {formats: ["ears"]}});
+        let project_done_loading = new Property(ModelProject, "boolean", "project_done_loading", {default: false, exposed: false, condition: {formats: [FORMAT_ID]}});
         let ears_settings = new Property(ModelProject, "instance", "ears_settings", {default: {
                 enabled: false,
                 ears_mode: "none",
@@ -3333,17 +3380,19 @@ BBPlugin.register('ears_manipulator', {
                 emissive: false
             },
             exposed: false,
-            condition: {formats: ["ears"]}
+            condition: {formats: [FORMAT_ID]}
         }
         );
-        let ears_alfalfa = new Property(ModelProject, 'instance', 'ears_alfalfa', {default: {entries: {}}, exposed: false, condition: {formats: ["ears"]}});
-        let group_ids = new Property(Group, 'string', 'id', {condition: {formats: ["ears"]}});
+        let ears_alfalfa = new Property(ModelProject, 'instance', 'ears_alfalfa', {default: {entries: {}}, exposed: false, condition: {formats: [FORMAT_ID]}});
+        let group_ids = new Property(Group, 'string', 'id', {condition: {formats: [FORMAT_ID]}});
+        let ears_meshes = new Property(Mesh, 'boolean', 'is_ears', {default: false, condition: {formats: [FORMAT_ID]}});
 
         // Action to hide layers, similar to the one available in the skin format
         let layer_toggle = new Action('ears_toggle_skin_layers', {
+            name: "Toggle Skin Layer",
             icon: 'layers_clear',
             category: 'edit',
-            condition: {formats: ["ears"]},
+            condition: {formats: [FORMAT_ID]},
             click() {
                 let edited = Mesh.all.filter(m => m.name.includes("Layer"));
                 if (!edited.length) return;
@@ -3356,10 +3405,27 @@ BBPlugin.register('ears_manipulator', {
         })
         toDelete.push(layer_toggle);
 
+        let ears_visibility_toggle = new Action('ears_toggle_parts', {
+            name: "Toggle Ears Parts' Visibility",
+            icon: 'layers_clear',
+            category: 'edit',
+            condition: {formats: [FORMAT_ID]},
+            click() {
+                let edited = Mesh.all.filter(m => m.is_ears);
+                if (!edited.length) return;
+                Undo.initEdit({elements: edited});
+                let visibility = !edited[0].visibility;
+                edited.forEach(m => m.visibility = visibility);
+                Undo.finishEdit(`${visibility ? "Show" : "Hide"} all Ears parts`);
+                Canvas.updateVisibility();
+            }
+        })
+        toDelete.push(layer_toggle);
+
         let outliner = Toolbars.outliner;
         let layer_toggle_index = outliner.children.findIndex(e => e.id == 'toggle_skin_layer');
         if (layer_toggle_index >= 0) {
-            outliner.children.splice(layer_toggle_index, 0, layer_toggle)
+            outliner.children.splice(layer_toggle_index, 0, layer_toggle, ears_visibility_toggle);
         }
 
         // Add Ears manipulator menu
@@ -3370,12 +3436,33 @@ BBPlugin.register('ears_manipulator', {
             name: "Enable Ears Mod",
             icon: "done",
             value: false,
-            onChange: ((val) => {
+            onChange(val) {
+                let base_texture = getTexture("base");
+                Undo.initEdit({
+                    elements: getAllEarsMeshes(),
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        enabled: true
+                    }
+                })
                 Project.ears_settings.enabled = val;
-                updateAllEarsFeatures();
-                writeEarsSettingsToTexture(getTexture("base"));
+                let changes = updateAllEarsFeatures();
+                writeEarsSettingsToTexture(base_texture);
+                Undo.finishEdit(`${val ? "Enable" : "Disable"} Ears`,
+                    {
+                        elements: changes.elements,
+                        outliner: true,
+                        textures: [base_texture, ...changes.textures],
+                        bitmap: true,
+                        ears_settings: {
+                            enabled: true
+                        }
+                    });
                 Panels.ears_manipulator.updateAllToolbars();
-            })
+            },
+            get() {return Project.ears_settings.enabled;}
         });
         ears_enabled.addLabel(true);
         toDelete.push(ears_enabled);
@@ -3384,7 +3471,17 @@ BBPlugin.register('ears_manipulator', {
             name: "Slim model",
             icon: "done",
             value: false,
-            onChange: ((val) => {Project.skin_slim = val; updateArmsWidth();})
+            onChange: ((val) => {
+                let left_arm = getOrCreateGroup("left_arm");
+                let right_arm = getOrCreateGroup("right_arm");
+                let elements = [...left_arm.children, ...right_arm.children];
+
+                Undo.initEdit({elements, outliner: true, skin_model: true})
+                Project.skin_model = (val ? "alex" : "steve");
+                elements = updateArmsWidth();
+                Undo.finishEdit("Change skin model", {elements, outliner: true, skin_model: true})
+            }),
+            get() {return Project.skin_model == "alex"}
         });
         slim_model.addLabel(true);
         toDelete.push(slim_model);
@@ -3409,10 +3506,39 @@ BBPlugin.register('ears_manipulator', {
                 }
             },
             onChange(sel) {
+                let head_group = getOrCreateGroup("head");
+                let ears = head_group.children.filter((child) => child.name.includes("Ear"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements: ears.map(g => g.children).flat(),
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        ears_mode: true
+                    }
+                });
+
+                let previous = Project.ears_settings.ears_mode;
                 Project.ears_settings.ears_mode = sel.value;
-                updateEars();
-                writeEarsSettingsToTexture(getTexture("base"));
+                let changes = updateEars();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit(`${previous == "none" ? "Enable" : (sel.value != "none" ? "Update" : "Disable")} ears`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        ears_mode: true
+                    }
+                });
+
                 Toolbars.ears_toolbar.update(true);
+            },
+            get() {
+                return Project.ears_settings.ears_mode;
             }
         });
         ears_mode.addLabel(true);
@@ -3428,10 +3554,34 @@ BBPlugin.register('ears_manipulator', {
                 back: "Back"
             },
             onChange(sel) {
+                let head_group = getOrCreateGroup("head");
+                let ears = head_group.children.filter((child) => child.name.includes("Ear"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements: ears.map(g => g.children).flat(),
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        ears_anchor: true
+                    }
+                });
                 Project.ears_settings.ears_anchor = sel.value;
-                updateEars();
-                writeEarsSettingsToTexture(getTexture("base"));
-            }
+                let changes = updateEars();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit("Update ears anchor", {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        ears_anchor: true
+                    }
+                });
+            },
+            get() {return Project.ears_settings.ears_anchor}
         });
         ears_anchor.addLabel(true);
         toDelete.push(ears_anchor);
@@ -3447,10 +3597,36 @@ BBPlugin.register('ears_manipulator', {
                 both: "Claws and Horn"
             },
             onChange(sel) {
+                let elements = Mesh.all.filter((m) => m.name.includes("Claw") || m.name.includes("Horn"))
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        protrusions: true
+                    }
+                });
+
+                previous = Project.ears_settings.protrusions;
+
                 Project.ears_settings.protrusions = sel.value;
-                updateProtrusions();
-                writeEarsSettingsToTexture(getTexture("base"));
-            }
+                let changes = updateProtrusions();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit(`${previous == "none" ? "Enable" : (sel.value != "none" ? "Update" : "Disable")} protrusions`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        protrusions: true
+                    }
+                });
+            },
+            get() {return Project.ears_settings.protrusions}
         });
         protrusions.addLabel(true);
         toDelete.push(protrusions);
@@ -3467,11 +3643,36 @@ BBPlugin.register('ears_manipulator', {
                 vertical: "Vertical"
             },
             onChange(sel) {
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements: Mesh.all.filter((m) => m.name.includes("Tail")),
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_mode: true
+                    }
+                });
+
+                let previous = Project.ears_settings.tail_mode;
+
                 Project.ears_settings.tail_mode = sel.value;
+                let changes = updateTail();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit(`${previous == "none" ? "Enable" : (sel.value != "none" ? "Update" : "Disable")} tail`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_mode: true
+                    }
+                });
+
                 Toolbars.tail_toolbar.update();
                 Toolbars.tail_bends_toolbar.update();
-                updateTail();
-                writeEarsSettingsToTexture(getTexture("base"));
             }
         });
         tail_mode.addLabel(true);
@@ -3488,11 +3689,35 @@ BBPlugin.register('ears_manipulator', {
                 max: 4,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_segments: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.tail_segments = val;
                 Toolbars.tail_bends_toolbar.update();
                 updateTail();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.finishEdit("Change number of tail segments", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_segments: true
+                    }
+                });
             }
         });
         toDelete.push(tail_segments);
@@ -3508,10 +3733,34 @@ BBPlugin.register('ears_manipulator', {
                 max: 90,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_1: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.tail_bend_1 = val;
                 updateTail();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.finishEdit("Change first tail bend", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_1: true
+                    }
+                });
             }
         });
         toDelete.push(tail_bend_1);
@@ -3527,10 +3776,34 @@ BBPlugin.register('ears_manipulator', {
                 max: 90,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_2: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.tail_bend_2 = val;
                 updateTail();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.finishEdit("Change second tail bend", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_2: true
+                    }
+                });
             }
         });
         toDelete.push(tail_bend_2);
@@ -3546,10 +3819,34 @@ BBPlugin.register('ears_manipulator', {
                 max: 90,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_3: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.tail_bend_3 = val;
                 updateTail();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.finishEdit("Change first tail bend", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_3: true
+                    }
+                });
             }
         });
         toDelete.push(tail_bend_3);
@@ -3565,10 +3862,34 @@ BBPlugin.register('ears_manipulator', {
                 max: 90,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_4: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.tail_bend_4 = val;
                 updateTail();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Tail"));
+                Undo.finishEdit("Change first tail bend", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        tail_bend_4: true
+                    }
+                });
             }
         });
         toDelete.push(tail_bend_4);
@@ -3578,9 +3899,33 @@ BBPlugin.register('ears_manipulator', {
             icon: "done",
             value: false,
             onChange(val) {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        snout: true
+                    }
+                });
+
                 Project.ears_settings.snout = val;
-                updateSnout();
+                let changes = updateSnout();
                 writeEarsSettingsToTexture(getTexture("base"));
+
+                Undo.finishEdit(`${val ? "Enable" : "Disable"} snout`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        snout: true
+                    }
+                });
+
                 Toolbars.snout_size_toolbar.update();
             }
         });
@@ -3598,13 +3943,39 @@ BBPlugin.register('ears_manipulator', {
                 max: 7,
                 step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_width: true
+                    }
+                })
+            },
             onChange(val) {
                 Project.ears_settings.snout_width = val;
                 updateSnout();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.finishEdit("Change snout width", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_width: true
+                    }
+                })
             }
         });
         toDelete.push(snout_width);
+
+        let snout_offset;
 
         let snout_height = new NumSlider("snout_height", {
             name: "Snout Height",
@@ -3617,10 +3988,40 @@ BBPlugin.register('ears_manipulator', {
                     max: 4,
                     step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_height: true,
+                        snout_offset: true
+                    }
+                })
+            },
             onChange(val) {
                 Project.ears_settings.snout_height = val;
+                if (Project.ears_settings.snout_offset > 8 - val) {
+                    Project.ears_settings.snout_offset = 8 - val;
+                    snout_offset.setValue(8 - val, false);
+                }
                 updateSnout();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.finishEdit("Change snout height", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_height: true,
+                        snout_offset: true
+                    }
+                })
             }
         });
         toDelete.push(snout_height);
@@ -3636,15 +4037,39 @@ BBPlugin.register('ears_manipulator', {
                     max: 6,
                     step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_length: true
+                    }
+                })
+            },
             onChange(val) {
                 Project.ears_settings.snout_length = val;
                 updateSnout();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.finishEdit("Change snout length", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_length: true
+                    }
+                })
             }
         });
         toDelete.push(snout_length);
 
-        let snout_offset = new NumSlider("snout_offset", {
+        snout_offset = new NumSlider("snout_offset", {
             name: "Snout Offset",
             label: false,
             color: "white",
@@ -3655,33 +4080,81 @@ BBPlugin.register('ears_manipulator', {
                     max: 7,
                     step: 1
             },
+            onBefore() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_offset: true
+                    }
+                })
+            },
             onChange(val) {
                 if (val > 8 - snout_height.value) {
                     val = 8 - snout_height.value;
-                    this.setValue(val, false)
+                    this.setValue(val, false);
                 }
                 Project.ears_settings.snout_offset = val;
                 updateSnout();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                let elements = Mesh.all.filter((m) => m.name.includes("Snout"));
+                Undo.finishEdit("Change snout offset", {
+                    elements,
+                    outliner: true,
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        snout_offset: true
+                    }
+                })
             }
         });
         toDelete.push(snout_offset);
 
-        let chest_enabled = new Toggle("chest_enabled", {
+        const chest_enabled = new Toggle("chest_enabled", {
             name: "Chest",
             icon: "done",
             value: false,
             onChange(val) {
+                let elements = Mesh.all.filter((m) => m.name.includes("Chest"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        chest: true
+                    }
+                });
+
                 Project.ears_settings.chest = val;
-                updateChest();
+                let changes = updateChest();
                 writeEarsSettingsToTexture(getTexture("base"));
+
+                Undo.finishEdit(`${val ? "Enable" : "Disable"} chest`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        chest: true
+                    }
+                });
+
                 Toolbars.chest_toolbar.update();
             }
         });
         chest_enabled.addLabel(true);
         toDelete.push(chest_enabled);
 
-        let chest_size = new NumSlider("chest_size", {
+        const chest_size = new NumSlider("chest_size", {
             name: "Chest Size",
             label: true,
             color: "white",
@@ -3692,15 +4165,28 @@ BBPlugin.register('ears_manipulator', {
                 max: 100,
                 step: 1,
             },
+            onBefore() {
+                Undo.initEdit({
+                    group: getGroup("chest"),
+                    textures: [getTexture("base")],
+                    bitmap: true,
+                    ears_settings: {
+                        chest_size: true
+                    }
+                });
+            },
             onChange(val) {
                 Project.ears_settings.chest_size = val;
                 updateChest();
                 writeEarsSettingsToTexture(getTexture("base"));
+            },
+            onAfter() {
+                Undo.finishEdit("Change chest size");
             }
         });
         toDelete.push(chest_size);
 
-        let wings_mode = new BarSelect("wings_mode", {
+        const wings_mode = new BarSelect("wings_mode", {
             name: "Wings Mode",
             value: "none",
             options: {
@@ -3711,16 +4197,42 @@ BBPlugin.register('ears_manipulator', {
                 asymmetric_single_r: "Asymmetric Single (Right)"
             },
             onChange(sel) {
+                let elements = Mesh.all.filter((m) => m.name.includes("Wing"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        wings_mode: true
+                    }
+                });
+
+                let previous = Project.ears_settings.wings_mode;
+
                 Project.ears_settings.wings_mode = sel.value;
+                let changes = updateWings();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit(`${previous == "none" ? "Enable" : sel.value != "none" ? "Update" : "Disable"} wing(s)`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture, ...changes.textures],
+                    bitmap: true,
+                    ears_settings: {
+                        wings_mode: true
+                    }
+                });
+
                 Toolbars.wings_toolbar.update();
-                updateWings();
-                writeEarsSettingsToTexture(getTexture("base"));
             }
         });
         wings_mode.addLabel(true);
         toDelete.push(wings_mode);
 
-        let wings_animation = new BarSelect("wings_animation", {
+        const wings_animation = new BarSelect("wings_animation", {
             name: "Wings Animation",
             value: "normal",
             condition: (() => wings_mode.value != "none"),
@@ -3730,28 +4242,56 @@ BBPlugin.register('ears_manipulator', {
             },
             onChange(sel) {
                 Project.ears_settings.wings_animation = sel.value;
-                writeEarsSettingsToTexture(getTexture("base"));
+                let base = getTexture("base");
+                Undo.initEdit({textures: [base]});
+                writeEarsSettingsToTexture(base);
+                Undo.finishEdit(`${sel.value == "none" ? "Disable": "Enable"} wing(s) animation`);
             }
         });
         wings_animation.addLabel(true);
         toDelete.push(wings_animation);
 
-        let cape_enabled = new Toggle("cape_enabled", {
+        const cape_enabled = new Toggle("cape_enabled", {
             name: "Cape",
             icon: "done",
             value: false,
             onChange: ((val) => {
+                let elements = Mesh.all.filter((m) => m.name.includes("Cape"));
+                let base_texture = getTexture("base");
+
+                Undo.initEdit({
+                    elements,
+                    outliner: true,
+                    textures: [base_texture],
+                    bitmap: true,
+                    ears_settings: {
+                        cape: true
+                    }
+                });
+
                 Project.ears_settings.cape = val;
-                updateCape();
-                writeEarsSettingsToTexture(getTexture("base"));
+                let changes = updateCape();
+                writeEarsSettingsToTexture(base_texture);
+
+                Undo.finishEdit(`${val ? "Enable" : "Disable"} cape`, {
+                    elements: changes.elements,
+                    outliner: true,
+                    textures: [base_texture, ...changes.textures],
+                    bitmap: true,
+                    ears_settings: {
+                        cape: true
+                    }
+                });
             })
         });
         cape_enabled.addLabel(true);
         toDelete.push(cape_enabled);
 
         function setBarItemsValues(slim, ears_settings) {
-            slim_model.set(slim);
-            ears_enabled.set(ears_settings.enabled);
+            slim_model.value = slim;
+            slim_model.updateEnabledState();
+            ears_enabled.value = ears_settings.enabled;
+            ears_enabled.updateEnabledState();
             ears_mode.set(ears_settings.ears_mode);
             ears_anchor.set(ears_settings.ears_anchor);
             protrusions.set(ears_settings.protrusions);
@@ -3761,16 +4301,19 @@ BBPlugin.register('ears_manipulator', {
             tail_bend_2.setValue(ears_settings.tail_bend_2);
             tail_bend_3.setValue(ears_settings.tail_bend_3);
             tail_bend_4.setValue(ears_settings.tail_bend_4);
-            snout_enabled.set(ears_settings.snout);
+            snout_enabled.value = ears_settings.snout;
+            snout_enabled.updateEnabledState();
             snout_width.setValue(ears_settings.snout_width);
             snout_height.setValue(ears_settings.snout_height);
             snout_length.setValue(ears_settings.snout_length);
             snout_offset.setValue(ears_settings.snout_offset);
-            chest_enabled.set(ears_settings.chest);
+            chest_enabled.value = ears_settings.chest;
+            chest_enabled.updateEnabledState();
             chest_size.setValue(ears_settings.chest_size);
             wings_mode.set(ears_settings.wings_mode);
             wings_animation.set(ears_settings.wings_animation);
-            cape_enabled.set(ears_settings.cape);
+            cape_enabled.value = ears_settings.cape;
+            cape_enabled.updateEnabledState();
             panel.updateAllToolbars();
         }
 
@@ -3896,7 +4439,7 @@ BBPlugin.register('ears_manipulator', {
             icon: "settings",
             growable: true,
             condition: {
-                formats: ["ears"],
+                formats: [FORMAT_ID],
                 modes: ["edit", "paint"]
             },
             display_condition: {
@@ -4011,7 +4554,9 @@ BBPlugin.register('ears_manipulator', {
                 }
             },
             async onFormChange(result) {
+                if (!this.previous_texture_path || this.previous_texture_path == result.texture.path) return;
                 if (result.texture) {
+                    this.previous_texture_path = result.texture.path;
                     var canvas = Interface.createElement('canvas', {height: "64", width: "64"});
                     var ctx = canvas.getContext("2d");
                     var d = this;
@@ -4038,7 +4583,7 @@ BBPlugin.register('ears_manipulator', {
             async onConfirm(result) {
                 if(newProject(format)){
                     Project.ears_settings.enabled = result.ears_enabled;
-                    Project.skin_slim = (result.model == "slim");
+                    Project.skin_model = (result.model == "slim") ? "alex" : "steve";
 
                     var root_group = createVanillaGroups("root");
 
@@ -4047,10 +4592,10 @@ BBPlugin.register('ears_manipulator', {
                         "head_outer",
                         "body",
                         "body_outer",
-                        Project.skin_slim ? "left_arm_slim" : "left_arm",
-                        Project.skin_slim ? "left_arm_slim_outer" : "left_arm_outer",
-                        Project.skin_slim ? "right_arm_slim" : "right_arm",
-                        Project.skin_slim ? "right_arm_slim_outer" : "right_arm_outer",
+                        Project.skin_model == "alex" ? "left_arm_slim" : "left_arm",
+                        Project.skin_model == "alex" ? "left_arm_slim_outer" : "left_arm_outer",
+                        Project.skin_model == "alex" ? "right_arm_slim" : "right_arm",
+                        Project.skin_model == "alex" ? "right_arm_slim_outer" : "right_arm_outer",
                         "left_leg",
                         "left_leg_outer",
                         "right_leg",
@@ -4096,7 +4641,7 @@ BBPlugin.register('ears_manipulator', {
 
                         if (Project.ears_alfalfa.entries["cape"]) {
                             const wing_texture = new Texture({name: "cape", id: "cape", width: 20, height: 16})
-                                .fromDataURL(b64ToDataUtl(Project.ears_alfalfa.entries["cape"], "image/png"))
+                                .fromDataURL(b64ToDataUrl(Project.ears_alfalfa.entries["cape"], "image/png"))
                                 .add();
                             wing_texture.uv_width = 20;
                             wing_texture.uv_height = 16;
@@ -4115,17 +4660,20 @@ BBPlugin.register('ears_manipulator', {
                         Canvas.updateAll();
                     } else {
                         const base_texture = new Texture({name: "base", id: "base", width: 64, height: 64})
-                            .fromDataURL(b64ToDataUrl(Project.skin_slim ? default_texture_slim : default_texture_wide, "image/png"))
+                            .fromDataURL(b64ToDataUrl(Project.skin_model == "alex" ? default_texture_slim : default_texture_wide, "image/png"))
                             .add();
                         base_texture.uv_width = 64;
                         base_texture.uv_height = 64;
                     }
 
-                    setBarItemsValues(Project.skin_slim, Project.ears_settings);
+                    setBarItemsValues(Project.skin_model == "alex", Project.ears_settings);
 
                     for (const part of vanilla_parts) {
-                        createMesh(model_meshes[part]);
+                        let m = createMesh(model_meshes[part]);
+                        if (!result.texture && part.endsWith("outer")) m.visibility = false;
                     }
+
+                    Canvas.updateVisibility();
 
                     Project.project_done_loading = true;
                 }
@@ -4133,7 +4681,7 @@ BBPlugin.register('ears_manipulator', {
         });
 
         function onParsed(data) {
-            setBarItemsValues(Project.skin_slim, Project.ears_settings);
+            setBarItemsValues(Project.skin_model == "alex", Project.ears_settings);
         }
 
         Codecs.project.on('parsed', onParsed);
@@ -4144,8 +4692,49 @@ BBPlugin.register('ears_manipulator', {
             callback: onParsed
         });
 
+        function onCreateUndoSave({save, aspects}) {
+            if (Project.format.id != FORMAT_ID) return;
+            if (aspects && aspects.ears_settings) {
+                save.ears_settings = {};
+                for (let key in aspects.ears_settings) {
+                    if (aspects.ears_settings[key]) save.ears_settings[key] = Project.ears_settings[key];
+                }
+            }
+
+            if (aspects && aspects.skin_model) {
+                save.skin_model = Project.skin_model;
+            }
+        }
+
+        Blockbench.on("create_undo_save", onCreateUndoSave);
+        eventListeners.push({
+            addedTo: Blockbench,
+            e: "create_undo_save",
+            callback: onCreateUndoSave
+        });
+
+        function onLoadUndoSave({save, reference, mode}) {
+            if (Project.format.id != FORMAT_ID) return;
+            if (save.ears_settings) {
+                for (let [k, v] of Object.entries(save.ears_settings)) {
+                    Project.ears_settings[k] = v;
+                }
+            }
+            if (save.skin_model) {
+                Project.skin_model = save.skin_model
+            }
+            setBarItemsValues(Project.skin_model == "alex", Project.ears_settings)
+        }
+
+        Blockbench.on("load_undo_save", onLoadUndoSave);
+        eventListeners.push({
+            addedTo: Blockbench,
+            e: "load_undo_save",
+            callback: onLoadUndoSave
+        });
+
         // Add new model format
-        format = new ModelFormat('ears', {
+        format = new ModelFormat(FORMAT_ID, {
             icon: 'icon-player',
             name: 'Ears Skin',
             description: 'Player model for the Ears mod.',
@@ -4170,7 +4759,7 @@ BBPlugin.register('ears_manipulator', {
             },
             onActivation() {
                 if (Project.project_done_loading) {
-                    setBarItemsValues(Project.skin_slim, Project.ears_settings);
+                    setBarItemsValues(Project.skin_model == "alex", Project.ears_settings);
                 };
             },
             onSetup() {
@@ -4184,7 +4773,11 @@ BBPlugin.register('ears_manipulator', {
         for (var {addedTo, e, callback} of eventListeners) {
             addedTo.removeListener(e, callback);
         }
-
+        let outliner = Toolbars.outliner;
+        var to_remove;
+        while ((to_remove = outliner.children.findIndex(e => e.id.startsWith("ears_toggle_"))) >= 0) {
+            outliner.children.splice(to_remove, 1);
+        }
     }
 });
 
